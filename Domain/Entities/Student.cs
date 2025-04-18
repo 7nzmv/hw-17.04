@@ -11,4 +11,5 @@ public class Student
     [Required]
     public string LastName { get; set; }
     public DateTime Birthdate { get; set; }
+    public List<Enrollment> Enrollments { get; set; }
 }

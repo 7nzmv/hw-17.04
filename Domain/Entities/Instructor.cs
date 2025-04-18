@@ -9,4 +9,5 @@ public class Instructor
     public string FirstName { get; set; }
     public string LastName { get; set; }
     public string Phone { get; set; }
+    public List<CourseAssignment> CourseAssignments { get; set; }
 }

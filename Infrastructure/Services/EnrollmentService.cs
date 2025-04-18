@@ -1,20 +1,23 @@
 using System.Net;
 using AutoMapper;
 using Domain.DTOs.EnrollmentDto;
+using Domain.DTOs.InstructorDto;
 using Domain.DTOs.StudentDto;
 using Domain.Entities;
+using Domain.Filters;
 using Domain.Responses;
 using Infrastructure.Data;
+using Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services;
 
-public class EnrollmentService(DataContext context, IMapper mapper)
+public class EnrollmentService(DataContext context, IMapper mapper) : IEnrollmentService
 {
     public async Task<Response<GetEnrollmentDto>> AddEnrollment(CreateEnrrollmentDto enrrollmentDto)
     {
         var enrollment = mapper.Map<Enrollment>(enrrollmentDto);
-       
+
 
         await context.Enrollments.AddAsync(enrollment);
         var result = await context.SaveChangesAsync();
@@ -40,12 +43,21 @@ public class EnrollmentService(DataContext context, IMapper mapper)
             : new Response<string>("Enrollment deleted!");
     }
 
-    public async Task<Response<List<GetEnrollmentDto>>> GetAll()
+    public async Task<Response<List<GetEnrollmentDto>>> GetAll(StudentFilter filter)
     {
-        var enrollments = await context.Enrollments.ToListAsync();
+        var validfilter = new ValidFilter(filter.PageNumber, filter.PageSize);
+        var enrollments = context.Enrollments.AsQueryable();
 
-        var data = mapper.Map<List<GetEnrollmentDto>>(enrollments);
-        return new Response<List<GetEnrollmentDto>>(data);
+        var mapped = mapper.Map<List<GetEnrollmentDto>>(enrollments);
+        var totalRecords = mapped.Count;
+
+        var data = mapped
+            .Skip((validfilter.PageNumber - 1) * validfilter.PageSize)
+            .Take(validfilter.PageSize)
+            .ToList();
+
+        return new PagedResponse<List<GetEnrollmentDto>>(data, validfilter.PageNumber, validfilter.PageSize,
+            totalRecords);
     }
 
     public async Task<Response<GetEnrollmentDto>> GetEnrollmentById(int id)

@@ -10,4 +10,5 @@ public class Course
     public string Title { get; set; }   
     public string Description { get; set; }
     public decimal Price { get; set; }
+    public List<Enrollment> Enrollments { get; set; }
 }
